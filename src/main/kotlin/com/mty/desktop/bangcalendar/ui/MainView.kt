@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,14 +23,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mty.desktop.bangcalendar.BangCalendarApplication
 import com.mty.desktop.bangcalendar.util.CalendarUtil
 
 object MainView {
 
     @Composable
+    fun CalendarMonthTitle(calendarUtil: CalendarUtil) {
+        Text(
+            text = "${calendarUtil.year}年${calendarUtil.month}月",
+            modifier = Modifier.padding(20.dp, 10.dp)
+        )
+    }
+
+    @Composable
     fun CalendarMonthView(calendarUtil: CalendarUtil, birthdayMap: HashMap<String, Int>) {
-        LazyVerticalGrid(GridCells.Fixed(7)) {
-            val dateList = calendarUtil.getDateList()
+        val currentDay by ViewModel.currentDay.collectAsState()
+        LazyVerticalGrid(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(5.dp),
+            columns = GridCells.Fixed(7)
+        ) {
+            val daysList = calendarUtil.getDaysList()
             val daysOfWeek = listOf("日", "一", "二", "三", "四", "五", "六")
             items(daysOfWeek.size) { index ->
                 Text(
@@ -36,15 +52,29 @@ object MainView {
                     textAlign = TextAlign.Center
                 )
             }
-            items(dateList.size) { index ->
-                CalendarDateItem(dateList[index], false, false){}
+            items(daysList.size) { index ->
+                if (currentDay == daysList[index].toInt()) {
+                    CalendarDateItem(
+                        day = daysList[index],
+                        isSelected = true,
+                        isSystemDate = calendarUtil.apply { day = daysList[index].toInt() }.toDate().date
+                                == BangCalendarApplication.systemDate.toDate().date
+                    ){}
+                } else {
+                    CalendarDateItem(
+                        day = daysList[index],
+                        isSelected = false,
+                        isSystemDate = false
+                    ){ ViewModel.setCurrentDay(daysList[index].toInt()) }
+                }
             }
+
         }
     }
 
     @Composable
     fun CalendarDateItem(
-        date: String,
+        day: String,
         isSelected: Boolean,
         isSystemDate: Boolean,
         characterImage: Painter? = null,
@@ -53,21 +83,30 @@ object MainView {
         if (isSelected) {
             Box(
                 modifier = Modifier
-                    .background(color = when {
+                    .background(
+                        color = when {
                         isSystemDate -> Color.Blue
                         else -> Color.LightGray
-                    })
-                    .clip(CircleShape)
-            )
+                    },
+                        shape = CircleShape
+                    )
+                    .padding(5.dp)
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.Center
+            ) { Text(day) }
         } else {
             Box(
-                modifier = Modifier.clickable { onClick() },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .padding(5.dp)
+                    .aspectRatio(1f)
+                    .clickable { onClick() },
                 contentAlignment = Alignment.Center
             ) {
                 if (characterImage != null)
-                    Image(characterImage, null)
+                    Image(characterImage, "角色图片")
                 else
-                    Text(date)
+                    Text(day)
             }
         }
     }
@@ -77,7 +116,22 @@ object MainView {
 @Composable
 fun App() {
     MaterialTheme {
-        MainView.CalendarMonthView(CalendarUtil().apply { clearDays() }, HashMap())
+        Row {
+            //主界面左侧
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                MainView.CalendarMonthTitle(CalendarUtil().apply { clearDays() })
+                MainView.CalendarMonthView(CalendarUtil().apply { clearDays() }, HashMap())
+            }
+            //主界面右侧
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("卡片区域")
+            }
+        }
     }
 }
 

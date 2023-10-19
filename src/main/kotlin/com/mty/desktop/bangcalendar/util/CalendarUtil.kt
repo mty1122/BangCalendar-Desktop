@@ -84,7 +84,7 @@ class CalendarUtil(val date: IntDate? = null) {
     /**
      * 要求当前日期为1号
      */
-    fun getDateList(): List<String> {
+    fun getDaysList(): List<String> {
         val maxDays = getMaximumDaysInMonth()
         val dayOfWeak = getDayOfWeak()
         val dateList = ArrayList<String>()
