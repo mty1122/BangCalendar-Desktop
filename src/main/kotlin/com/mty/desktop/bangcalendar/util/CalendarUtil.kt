@@ -3,7 +3,7 @@ package com.mty.desktop.bangcalendar.util
 import com.mty.desktop.bangcalendar.logic.model.IntDate
 import java.util.Calendar
 
-class CalendarUtil(val date: IntDate? = null) {
+class CalendarUtil(date: IntDate? = null) {
 
     operator fun minus(calendarUtil: CalendarUtil): Int =
         ( (this.getTimeInMillis() - calendarUtil.getTimeInMillis()) / (1000 * 3600 * 24) ).toInt()
@@ -15,9 +15,6 @@ class CalendarUtil(val date: IntDate? = null) {
 
         fun getDate(year: Int, month: Int, day: Int) =
             IntDate(year * 10000 + month * 100 + day)
-
-        fun differentOfTwoDates(dateStart: IntDate, dateEnd: IntDate): Int =
-            CalendarUtil(dateEnd) - CalendarUtil(dateStart)
 
     }
 
@@ -46,11 +43,12 @@ class CalendarUtil(val date: IntDate? = null) {
         //采用date初始化CalendarUtil(有参)
         date?.let {
             clear()
-            year = it.date / 10000
-            month = it.date % 10000 / 100
-            day = it.date % 100
+            year = it.value / 10000
+            month = it.value % 10000 / 100
+            day = it.value % 100
         }
         calendar.firstDayOfWeek = Calendar.SUNDAY
+        refreshRows()
     }
 
     fun getMaximumDaysInMonth(): Int {
@@ -61,13 +59,8 @@ class CalendarUtil(val date: IntDate? = null) {
         return calendar.get(Calendar.DAY_OF_WEEK)
     }
 
-    fun plusOneMonth() {
-        calendar.add(Calendar.MONTH, 1)
-        refreshRows()
-    }
-
-    fun minusOneMonth() {
-        calendar.add(Calendar.MONTH, -1)
+    fun setRelativeMonth(month: Int) {
+        calendar.add(Calendar.MONTH, month)
         refreshRows()
     }
 
@@ -81,12 +74,12 @@ class CalendarUtil(val date: IntDate? = null) {
 
     fun getTimeInMillis() = calendar.timeInMillis
 
-    /**
-     * 要求当前日期为1号
-     */
     fun getDaysList(): List<String> {
         val maxDays = getMaximumDaysInMonth()
+        val day = this.day
+        this.day = 1
         val dayOfWeak = getDayOfWeak()
+        this.day = day
         val dateList = ArrayList<String>()
         repeat(dayOfWeak - 1) {
             dateList.add("")
@@ -99,18 +92,16 @@ class CalendarUtil(val date: IntDate? = null) {
 
     private fun refreshRows() {
         val maxDays = getMaximumDaysInMonth()
+        val day = this.day
+        this.day = 1
         val dayOfWeak = getDayOfWeak()
+        this.day = day
         rows = if (maxDays + dayOfWeak < 37) {
             FIVE_ROWS
         } else {
             SIX_ROWS
         }
-        LogUtil.d(this, "maxDays = $maxDays  dayOfWeek = $dayOfWeak rows = $rows")
-    }
-
-    fun setRelativeMonth(month: Int) {
-        calendar.add(Calendar.MONTH, month)
-        refreshRows()
+        log(this, "Rows is $rows")
     }
 
     fun toDate() = getDate(year, month, day)
@@ -122,6 +113,9 @@ class CalendarUtil(val date: IntDate? = null) {
         in 13..18 -> "下午"
         else -> ""
     }
+
+    fun isSameDate(calendarUtil: CalendarUtil) = this.year == calendarUtil.year
+            && this.month == calendarUtil.month && this.day == calendarUtil.day
 
     override fun toString() = "${year}年${month}月${day}日"
 

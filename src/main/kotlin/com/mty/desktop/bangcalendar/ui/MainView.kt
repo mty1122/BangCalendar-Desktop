@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -23,28 +24,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.mty.desktop.bangcalendar.BangCalendarApplication
+import com.mty.desktop.bangcalendar.BangCalendarApplication.systemDate
 import com.mty.desktop.bangcalendar.util.CalendarUtil
 
 object MainView {
 
     @Composable
-    fun CalendarMonthTitle(calendarUtil: CalendarUtil) {
+    fun CalendarMonthTitle() {
+        val calendarViewState by ViewModel.calendarViewState.collectAsState()
         Text(
-            text = "${calendarUtil.year}年${calendarUtil.month}月",
+            text = "${calendarViewState.year}年${calendarViewState.month}月",
             modifier = Modifier.padding(20.dp, 10.dp)
         )
     }
 
     @Composable
-    fun CalendarMonthView(calendarUtil: CalendarUtil, birthdayMap: HashMap<String, Int>) {
+    fun CalendarMonthView(birthdayMap: HashMap<String, Int>) {
         val currentDay by ViewModel.currentDay.collectAsState()
+        val calendarViewState by ViewModel.calendarViewState.collectAsState()
+        val currentDaysList = calendarViewState.getDaysList()
         LazyVerticalGrid(
-            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalArrangement = when (calendarViewState.rows) {
+                CalendarUtil.FIVE_ROWS -> Arrangement.spacedBy(16.dp)
+                else -> Arrangement.spacedBy(5.dp)
+            },
             contentPadding = PaddingValues(5.dp),
             columns = GridCells.Fixed(7)
         ) {
-            val daysList = calendarUtil.getDaysList()
             val daysOfWeek = listOf("日", "一", "二", "三", "四", "五", "六")
             items(daysOfWeek.size) { index ->
                 Text(
@@ -52,20 +59,20 @@ object MainView {
                     textAlign = TextAlign.Center
                 )
             }
-            items(daysList.size) { index ->
-                if (currentDay == daysList[index].toInt()) {
+            items(currentDaysList.size) { index ->
+                if (currentDaysList[index] != ""
+                    && currentDay == currentDaysList[index].toInt()) {
                     CalendarDateItem(
-                        day = daysList[index],
+                        day = currentDaysList[index],
                         isSelected = true,
-                        isSystemDate = calendarUtil.apply { day = daysList[index].toInt() }.toDate().date
-                                == BangCalendarApplication.systemDate.toDate().date
+                        isSystemDate = calendarViewState.isSameDate(systemDate)
                     ){}
                 } else {
                     CalendarDateItem(
-                        day = daysList[index],
+                        day = currentDaysList[index],
                         isSelected = false,
                         isSystemDate = false
-                    ){ ViewModel.setCurrentDay(daysList[index].toInt()) }
+                    ){ ViewModel.setCurrentDay(currentDaysList[index].toInt()) }
                 }
             }
 
@@ -90,7 +97,6 @@ object MainView {
                     },
                         shape = CircleShape
                     )
-                    .padding(5.dp)
                     .aspectRatio(1f),
                 contentAlignment = Alignment.Center
             ) { Text(day) }
@@ -98,7 +104,6 @@ object MainView {
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .padding(5.dp)
                     .aspectRatio(1f)
                     .clickable { onClick() },
                 contentAlignment = Alignment.Center
@@ -108,6 +113,28 @@ object MainView {
                 else
                     Text(day)
             }
+        }
+    }
+
+    @Composable
+    fun ControlButtons() {
+        Row(horizontalArrangement = Arrangement.spacedBy(15.dp)) {
+            Button(
+                modifier = Modifier.padding(start = 15.dp),
+                onClick = {
+                    ViewModel.setRelativeCurrentMonth(-1)
+                }
+            ){ Text("上个月") }
+            Button(
+                onClick = {
+                    ViewModel.jumpToToday()
+                }
+            ){ Text("返回今天") }
+            Button(
+                onClick = {
+                    ViewModel.setRelativeCurrentMonth(1)
+                }
+            ){ Text("下个月") }
         }
     }
 
@@ -121,15 +148,16 @@ fun App() {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                MainView.CalendarMonthTitle(CalendarUtil().apply { clearDays() })
-                MainView.CalendarMonthView(CalendarUtil().apply { clearDays() }, HashMap())
+                MainView.CalendarMonthTitle()
+                MainView.CalendarMonthView(HashMap())
+                MainView.ControlButtons()
             }
             //主界面右侧
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("卡片区域")
+                Text("${systemDate.getTimeName()}好！")
             }
         }
     }

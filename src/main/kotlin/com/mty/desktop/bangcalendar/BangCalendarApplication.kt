@@ -7,8 +7,6 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.mty.desktop.bangcalendar.ui.App
 import com.mty.desktop.bangcalendar.util.CalendarUtil
-import java.awt.Dimension
-import kotlin.math.roundToInt
 
 object BangCalendarApplication {
 
@@ -20,7 +18,7 @@ fun main() = application {
     Window(
         title = "BangCalendar Desktop",
         onCloseRequest = ::exitApplication,
-        state = WindowState(size = DpSize(800.dp, 430.dp)),
+        state = WindowState(size = DpSize(800.dp, 500.dp)),
         resizable = false
     ) {
         App()
