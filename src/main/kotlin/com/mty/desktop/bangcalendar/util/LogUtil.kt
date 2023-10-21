@@ -8,7 +8,7 @@ object LogUtil {
 
     fun d(tag: String, msg: String) {
         if (ENABLED) {
-            println("tag:$tag, msg:$msg")
+            println("Log: tag:$tag, msg:$msg")
         }
     }
 

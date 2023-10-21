@@ -1,7 +1,12 @@
 package com.mty.desktop.bangcalendar.util
 
+import androidx.compose.ui.res.useResource
+import com.mty.desktop.bangcalendar.BangCalendarApplication
 import com.mty.desktop.bangcalendar.logic.model.IntDate
 import com.mty.desktop.bangcalendar.logic.model.Character
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 
 object CharacterUtil {
 
@@ -37,6 +42,16 @@ object CharacterUtil {
         val calendarUtilEarlier =
             CalendarUtil(CalendarUtil.getDate(systemDate.year, systemDate.month, systemDate.day))
         return (calendarUtilLater - calendarUtilEarlier)
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    fun getCharacterList() = useResource("data/character.json") {
+        Json.decodeFromStream<List<Character>>(it)
+    }
+
+    fun getCharacterListByMonth(month: Int) =
+        BangCalendarApplication.characterList.filter {
+        birthdayToMonth(it.birthday) == month
     }
 
     fun matchCharacter(id: Int) = id

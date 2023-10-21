@@ -7,10 +7,12 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.mty.desktop.bangcalendar.ui.App
 import com.mty.desktop.bangcalendar.util.CalendarUtil
+import com.mty.desktop.bangcalendar.util.CharacterUtil
 
 object BangCalendarApplication {
 
     val systemDate = CalendarUtil() //系统时间
+    val characterList = CharacterUtil.getCharacterList()
 
 }
 
